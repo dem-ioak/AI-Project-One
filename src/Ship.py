@@ -29,7 +29,6 @@ class Ship:
         self.init_board()
     
     def init_board(self):
-        """Initialize DxD Board generated following algorithm provided in part 1"""
         n = self.D
         
         self.board = [[Cell.BLOCKED for _ in range(n)] for _ in range(n)]
@@ -52,7 +51,26 @@ class Ship:
             valid_cells.add((r, c))
             open_cells.append((r, c))
 
-        # TODO - 2nd part of generation
+        # Collect all open cells with exactly 1 open neighbor
+        dead_ends = []
+        for oc in open_cells:
+            r, c = oc
+            open_neighbors = self.get_neighbor_count(r, c, Cell.OPEN)
+            if open_neighbors == 1:
+                dead_ends.append(oc)
+
+        # For approx. half of the dead ends, pick a random closed neighbor and open it
+        for de in dead_ends:
+            expand = random.randint(0, 1)
+            if expand:
+                r, c = de
+                closed_neighbors = self.get_neighbors(r, c, Cell.BLOCKED)
+                if closed_neighbors: # Some dead ends may no longer be dead ends after some iterations
+                    rand_cell = random.choice(closed_neighbors)
+                    nr, nc = rand_cell
+                    self.board[nr][nc] = Cell.OPEN
+                    open_cells.append((nr, nc))
+
         self.open_cells = open_cells
         
     # Helper Methods
@@ -162,10 +180,11 @@ class Ship:
 
     def display(self, path = None):
         """Display a grid image of the current board (FOR USE IN NOTEBOOK)"""
+        n = self.D
         copy_board = [row[:] for row in self.board]
         if not isinstance(copy_board[0][0], (float, int)):
-            for i in range(D):
-                for j in range(D):
+            for i in range(n):
+                for j in range(n):
                     copy_board[i][j] = copy_board[i][j].value
 
         if path:
@@ -177,3 +196,4 @@ class Ship:
         plt.imshow(image_data, "Blues")
         # plt.axis("off")
         plt.show()
+                      
